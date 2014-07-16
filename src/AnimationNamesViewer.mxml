@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
+					   xmlns:s="library://ns.adobe.com/flex/spark" 
+					   xmlns:mx="library://ns.adobe.com/flex/mx"
+					   creationComplete="init(event)">
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			import mx.managers.DragManager;
+			
+			protected function init(event:FlexEvent):void
+			{
+				addEventListener(NativeDragEvent.NATIVE_DRAG_ENTER, onDragIn);
+				addEventListener(NativeDragEvent.NATIVE_DRAG_DROP, onDrop);
+			}
+			
+			protected function onDragIn(event:NativeDragEvent):void
+			{
+				DragManager.acceptDragDrop(this);
+			}
+			
+			protected function onDrop(event:NativeDragEvent):void
+			{
+				DragManager.showFeedback(DragManager.COPY);
+				
+				var str:String = "";
+				var dropFiles:Array = event.clipboard.getData(ClipboardFormats.FILE_LIST_FORMAT) as Array;
+				for each (var file:File in dropFiles)
+				{
+					if (file.extension == "xml")
+					{
+						var fileStream:FileStream = new FileStream();
+						fileStream.open(file, FileMode.READ);
+						var text:String = fileStream.readMultiByte(file.size, File.systemCharset);
+						fileStream.close();
+						str += "-- " + file.name + "\n";
+						var arr:Array = text.match(/<mov name="\w+"/g);
+						for each (var mov:String in arr)
+						{
+							str += (mov.substring(mov.indexOf('"') + 1, mov.lastIndexOf('"'))) + "\n";
+						}
+					}
+					str += "\n";
+				}
+				txt_output.text = str;
+			}
+			
+		]]>
+	</fx:Script>
+	<s:TextArea id="txt_output" left="10" right="10" top="10" bottom="10" text="把想要分析XML文件都拽进来" editable="false" focusEnabled="false"/>
+</s:WindowedApplication>
